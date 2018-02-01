@@ -10,13 +10,24 @@ router.post("/", (req, res) => {
 
 
   User.findOne({ "email": credentials.email }).then(user => {
-    console.log(user)
     if (user && user.isValidPassword(credentials.password)) {
       res.json({ user: user.toAuthJSON() })
     }else {
       res.status(400).json({ errors: {global: "Invalid login credentials"}})
     }
   })
+})
+
+router.post("/confirmation", (req, res) => {
+  const token = req.body.token
+  User.findOneAndUpdate(
+    { confirmationToken: token },
+    { confirmationToken: "", confirmed: true},
+    { new: true}
+  ).then(user => 
+
+    user ? res.json({ user: user.toAuthJSON() }) : res.status(400).json({})
+  )
 })
 
 

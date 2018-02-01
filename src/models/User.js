@@ -15,7 +15,8 @@ const schema = new mongoose.Schema(
       unique: true
     },
     passwordHash: { type: String, required: true },
-    confirmed: { type: Boolean, default: false}
+    confirmed: { type: Boolean, default: false},
+    confirmationToken: { type: String, default: ""}
 }, {timestamps: true})
 
 schema.methods.setPassword = function setPassword(password) {
@@ -27,7 +28,8 @@ schema.methods.isValidPassword = function isValidPassword(password) {
 }
 schema.methods.generateJWT = function generateJWT() {
   return jwt.sign({
-    email: this.email
+    email: this.email,
+    confirmed: this.confirmed
   }, process.env.JWT_SECRET)
 }
 
@@ -37,6 +39,14 @@ schema.methods.toAuthJSON = function toAuthJSON() {
     confirmed: this.confirmed,
     token: this.generateJWT()
   }
+}
+
+schema.methods.setConfirmationToken = function setConfirmationToken() {
+  this.confirmationToken = this.generateJWT()
+}
+
+schema.methods.generateConfirmationUrl = function generateConfirmationUrl() {
+  return `${process.env.HOST}/confirmation/${this.confirmationToken}`
 }
 
 schema.plugin(uniqueValidator, {message: 'This email is already taken'})
